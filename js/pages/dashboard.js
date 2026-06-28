@@ -153,4 +153,4 @@ async function _loadDashNews() {
     container.innerHTML = `<div class="card-title">Latest Crypto News</div>
       <div style="color:var(--text-muted);font-size:12px">News feed unavailable.</div>`;
   }
-                  }
+}
