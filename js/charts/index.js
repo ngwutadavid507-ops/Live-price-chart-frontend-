@@ -1,311 +1,89 @@
-window.activePageCharts  =  [];  
- 
-function
- 
-initPageCharts(pageId)
- 
-{
- 
-    
-if
- 
-(pageId
- 
-===
- 
-'dashboard')
- 
-{
- 
-        
-const
- 
-ctx
- 
-=
- 
-document.getElementById('marketOverviewChart');
- 
-        if  (!ctx)  return;  
-        
-const
- 
-chart
- 
-=
- 
-new
- 
-Chart(ctx,
- 
-{
- 
-            
-type:
- 
-'line',
- 
-            
-data:
- 
-{
- 
-                
-labels:
- 
-['1H',
- 
-'2H',
- 
-'3H',
- 
-'4H',
- 
-'5H',
- 
-'6H'],
- 
-                
-datasets:
- 
-[{
- 
-label:
- 
-'BTC
- 
-Trend
- 
-Line',
- 
-data:
- 
-[66200,
- 
-66400,
- 
-66100,
- 
-66900,
- 
-67200,
- 
-67432],
- 
-borderColor:
- 
-'#f59e0b',
- 
-tension:
- 
-0.4,
- 
-borderWidth:
- 
-2,
- 
-pointRadius:
- 
-0
- 
-}]
- 
-            
-},
- 
-            
-options:
- 
-{
- 
-responsive:
- 
-true,
- 
-maintainAspectRatio:
- 
-false,
- 
-plugins:
- 
-{
- 
-legend:
- 
-{
- 
-display:
- 
-false
- 
+/**
+ * Chart Dispatcher — initializes Chart.js instances per page.
+ * Individual page files (analysis.js, backtest.js) handle their
+ * own chart creation; this file provides shared chart helpers.
+ */
+
+const CHART_DEFAULTS = {
+  responsive:          true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+  },
+  scales: {
+    x: {
+      display: false,
+      grid:    { color: 'rgba(255,255,255,0.05)' },
+    },
+    y: {
+      grid:  { color: 'rgba(255,255,255,0.05)' },
+      ticks: { color: '#888', font: { size: 10 } },
+    },
+  },
+};
+
+function destroyChart(instanceKey) {
+  if (window[instanceKey]) {
+    window[instanceKey].destroy();
+    window[instanceKey] = null;
+  }
 }
- 
-},
- 
-scales:
- 
-{
- 
-x:
- 
-{
- 
-grid:
- 
-{
- 
-display:
- 
-false
- 
+
+function createLineChart(canvasId, labels, data, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || typeof Chart === 'undefined') return null;
+
+  const ctx = canvas.getContext('2d');
+  const isPositive = data.length > 1 ? data[data.length - 1] >= data[0] : true;
+
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label:           options.label || '',
+        data,
+        borderColor:     isPositive ? '#00d4aa' : '#ff4d4d',
+        backgroundColor: isPositive ? 'rgba(0,212,170,0.05)' : 'rgba(255,77,77,0.05)',
+        borderWidth:     1.5,
+        pointRadius:     0,
+        fill:            true,
+        tension:         0.1,
+      }],
+    },
+    options: { ...CHART_DEFAULTS, ...options },
+  });
 }
- 
-},
- 
-y:
- 
-{
- 
-grid:
- 
-{
- 
-color:
- 
-'#1f2937'
- 
+
+function createSparklineChart(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || typeof Chart === 'undefined') return null;
+
+  const ctx = canvas.getContext('2d');
+  const isPositive = data.length > 1 ? data[data.length - 1] >= data[0] : true;
+
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map((_, i) => i),
+      datasets: [{
+        data,
+        borderColor: isPositive ? '#00d4aa' : '#ff4d4d',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill:        false,
+        tension:     0.3,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { display: false },
+      },
+      elements: { line: { borderJoinStyle: 'round' } },
+    },
+  });
 }
- 
-}
- 
-}
- 
-}
- 
-        
-});
- 
-        
-window.activePageCharts.push(chart);
- 
-    
-}
- 
-    
-if
- 
-(pageId
- 
-===
- 
-'portfolio')
- 
-{
- 
-        
-const
- 
-ctx
- 
-=
- 
-document.getElementById('allocationChart');
- 
-        
-if
- 
-(!ctx)
- 
-return;
- 
-        
-const
- 
-chart
- 
-=
- 
-new
- 
-Chart(ctx,
- 
-{
- 
-            
-type:
- 
-'doughnut',
- 
-            
-data:
- 
-{
- 
-                
-labels:
- 
-['BTC',
- 
-'ETH',
- 
-'SOL'],
- 
-                
-datasets:
- 
-[{
- 
-data:
- 
-[55,
- 
-30,
- 
-15],
- 
-backgroundColor:
- 
-['#f59e0b',
- 
-'#3b82f6',
- 
-'#10b981'],
- 
-borderStrokeColor:
- 
-'transparent'
- 
-}]
- 
-            
-},
- 
-            
-options:
- 
-{
- 
-responsive:
- 
-true,
- 
-maintainAspectRatio:
- 
-false
- 
-}
- 
-        
-});
- 
-        
-window.activePageCharts.push(chart);
- 
-    
-}
- 
-}
- 
- 
-🗺  SINGLE  PAGE  APPLICATION  ROUTES  (js/pages/)  
-📄
