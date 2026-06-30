@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('Phoenix Engine', 'Initializing data architecture...', 'info');
   } catch (e) { _showBootError('showToast missing: ' + e.message); }
 
-  // Step 1: Health check
   try {
     const health = await apiService.health();
     if (health.backend !== 'healthy') throw new Error('Backend not healthy');
@@ -34,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Step 2: Load market assets
   try {
     const marketData = await apiService.getMarketPairs(200);
     if (marketData.assets && marketData.assets.length > 0) {
@@ -46,7 +44,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     _seedFallbackAssets();
   }
 
-  // Step 3: Load watchlist
   try {
     const wl = await apiService.getWatchlist();
     globalStore.setState('watchlist', wl.symbols || []);
@@ -54,25 +51,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     globalStore.setState('watchlist', ['BTCUSDT','ETHUSDT','SOLUSDT']);
   }
 
-  // Step 4: Load journal
   try {
     const journal = await apiService.getJournalTrades();
     globalStore.setState('journal', journal.trades || []);
   } catch (e) { }
 
-  // Step 5: Load portfolio
   try {
     const portfolio = await apiService.getPortfolio();
     globalStore.setState('paperPortfolio', portfolio);
   } catch (e) { }
 
-  // Step 6: Load settings
   try {
     const settings = await apiService.getSettings();
     globalStore.setState('settings', settings);
   } catch (e) { }
 
-  // Step 7: Load market summary
   try {
     const summary = await apiService.getMarketSummary();
     globalStore.setState('marketSummary', summary);
@@ -80,7 +73,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   globalStore.setState('backendReady', true);
 
-  // Step 8: Navigate to dashboard
   try {
     if (typeof navigateTo === 'function') {
       navigateTo('dashboard');
@@ -95,20 +87,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('Phoenix Engine', 'System fully initialized.', 'success');
   } catch (e) { }
 
-  // Step 9: Connect WebSocket
   try {
     if (typeof wsService !== 'undefined') wsService.connect();
   } catch (e) {
     _showBootError('WebSocket connect failed: ' + e.message);
   }
 
-  // Step 10: Signal polling
   _startSignalPolling();
-
-  // Step 11: Auto-analyze top tokens (no manual input needed)
   _autoAnalyzeTopTokens();
 
-  // Step 12: Render ticker
   try {
     if (typeof renderTicker === 'function') renderTicker();
   } catch (e) {
@@ -133,29 +120,25 @@ function _startSignalPolling() {
     } catch (e) { }
   };
   poll();
-  setInterval(poll, 30_000);
+  setInterval(poll, 30000);
 }
 
 
-// Auto-analyze top 10 tokens automatically — no manual symbol entry needed
 const TOP_TOKENS = [
   'BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT',
   'ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','LINKUSDT',
 ];
 
 async function _autoAnalyzeTopTokens() {
-  const cache = {};
   for (const sym of TOP_TOKENS) {
     try {
       const result = await apiService.getAnalysis(sym);
       if (result && !result.error) {
-        cache[sym] = result;
         globalStore.setAnalysis(sym, result);
       }
     } catch (e) { }
-    await new Promise(r => setTimeout(r, 300)); // avoid overwhelming backend
+    await new Promise(r => setTimeout(r, 300));
   }
-  // Refresh every 60s
   setTimeout(_autoAnalyzeTopTokens, 60000);
 }
 
@@ -182,4 +165,4 @@ function _seedFallbackAssets() {
   ];
   globalStore.setState('assets', seeds);
   globalStore.setState('parentTrackAssets', seeds);
-      }
+  }
